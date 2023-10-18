@@ -3,41 +3,6 @@ import numpy as np
 import src.quaternion as s
 
 
-class OrientationQuaternion(unittest.TestCase):
-    def test_one_vector_one_reference(self) -> None:
-        position = np.array([6., 3., 10.]) / np.linalg.norm(np.array([6., 3., 10.]))
-        reference = np.array([2., 9., 8.]) / np.linalg.norm(np.array([2., 9., 8.]))
-        expected = s.rotation_quaternion(0.627328929,
-                                         np.array([-33 / np.sqrt(1861),
-                                                   -14 / np.sqrt(1861),
-                                                   24 / np.sqrt(1861)]))
-        actual = s.orientation_quaternion(position, reference)
-        self.assertTrue(np.allclose(actual, expected))
-
-    def test_multiple_vectors_one_reference(self) -> None:
-        positions = np.array([[6. / 12.041594578792296, 3. / 12.041594578792296, 10. / 12.041594578792296],
-                              [4. / 9.486832980505138, 7. / 9.486832980505138, 5. / 9.486832980505138],
-                              [-7. / 11.575836902790225, 6. / 11.575836902790225, 7. / 11.575836902790225]])
-
-        reference = np.array([2. / 12.206555615733702, 9. / 12.206555615733702, 8. / 12.206555615733702])
-
-        expected = np.array([[np.cos(0.627328929 / 2),
-                              np.sin(0.627328929 / 2) * -66. / 86.27861844049197,
-                              np.sin(0.627328929 / 2) * -28. / 86.27861844049197,
-                              np.sin(0.627328929 / 2) * 48. / 86.27861844049197],
-                             [np.cos(np.arccos(111 / (9.486832980505138 * 12.206555615733702)) / 2),
-                              np.sin(np.arccos(111 / (9.486832980505138 * 12.206555615733702)) / 2) * 11. / 33.0,
-                              np.sin(np.arccos(111 / (9.486832980505138 * 12.206555615733702)) / 2) * -22. / 33.0,
-                              np.sin(np.arccos(111 / (9.486832980505138 * 12.206555615733702)) / 2) * 22. / 33.0],
-                             [np.cos(np.arccos(96 / (11.575836902790225 * 12.206555615733702)) / 2),
-                              np.sin(np.arccos(96 / (11.575836902790225 * 12.206555615733702)) / 2) * -15. / 103.6822067666386,
-                              np.sin(np.arccos(96 / (11.575836902790225 * 12.206555615733702)) / 2) * 70. / 103.6822067666386,
-                              np.sin(np.arccos(96 / (11.575836902790225 * 12.206555615733702)) / 2) * -75. / 103.6822067666386]])
-
-        actual = s.orientation_quaternion(positions, reference)
-        self.assertTrue(np.allclose(actual, expected))
-
-
 class VectorToQuaternion(unittest.TestCase):
     def test_one_vector(self):
         vector = np.array([-3.58214914, 5.94684718, 6.93615019])

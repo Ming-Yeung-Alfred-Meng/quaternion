@@ -18,31 +18,6 @@ def normalize(vectors: np.ndarray) -> np.ndarray:
     return vectors
 
 
-# TODO: the routine to find the axis and angle of rotation is wrong.
-def orientation_quaternion(positions: np.ndarray,
-                           references: np.ndarray) -> np.ndarray:
-    """
-    Compute the quaternions representing the orientations of positions with respect to a reference position.
-    :param positions: n x 3 numpy array of position
-    :param references: n x 3 numpy array of reference positions
-    :return: n x 4 quaternions orientation of vectors in positions.
-    """
-    assert positions.dtype == np.float64 and references.dtype == np.float64
-    assert np.allclose(np.linalg.norm(positions, axis=-1), np.linalg.norm(references, axis=-1))
-    assert positions.shape[-1] == 3 and references.shape[-1] == 3
-    assert len(positions.shape) <= 2 and len(references.shape) <= 2
-    if len(references.shape) == 2:
-        assert len(positions.shape) == 2 and positions.shape[0] == references.shape[0]
-
-    # The order of cross product needs to match the specific
-    # formulation of the quaternion of a rotation.
-
-    return rotation_quaternion(np.arccos(np.sum(positions * references, axis=-1)
-                                         / (np.linalg.norm(positions, axis=-1)
-                                            * np.linalg.norm(references, axis=-1))),
-                               np.cross(positions, references))
-
-
 def quaternion_multiplication(q: np.ndarray,
                               p: np.ndarray) -> np.ndarray:
     """
