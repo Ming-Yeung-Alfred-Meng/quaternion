@@ -7,29 +7,30 @@ import numpy as np
 import src.coordinates as coc
 import src.transformations as t
 
-# TODO: to be tested.
+
 # orientation_keyframe, and center_keyframe should not be shallow copies of vertex and center.
-def record_keyframes(vertex: np.ndarray,
+def record_keyframes(orientation: np.ndarray,
                      center: np.ndarray,
                      orientation_keyframe: np.ndarray,
                      center_keyframe: np.ndarray) -> None:
     """
     Get a vertex's position local to a given origin.
+    :param orientation:
     :param vertex: 3-numpy-array in world frame used to determine orientation.
     :param center: 3-numpy-array of the object's center in world frame
     :param orientation_keyframe: 3-numpy-array where orientation is stored.
     :param center_keyframe: 3-numpy-array where current center is stored.
     :return: None
     """
-    assert (vertex.dtype == np.float64
+    assert (orientation.dtype == np.float64
             and center.dtype == np.float64
             and orientation_keyframe.dtype == np.float64
             and center_keyframe.dtype == np.float64)
-    assert vertex.shape == (3,) and center.shape == (3,)
-    assert (vertex.shape == orientation_keyframe.shape
+    assert orientation.shape == (4,) and center.shape == (3,)
+    assert (orientation.shape == orientation_keyframe.shape
             and center.shape == center_keyframe.shape)
 
-    orientation_keyframe[:] = vertex - center
+    orientation_keyframe[:] = orientation
     center_keyframe[:] = center
 
 
