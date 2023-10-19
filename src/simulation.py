@@ -244,30 +244,146 @@ def projection(choice: int,
         return orthographic_projection
 
 
-def run() -> None:
+def load_settings() -> Dict:
+    """Load settings of the simulation."""
     center = np.array([300., 300., 300.])
     vertices, faces = init_cuboid(center, 50, 50, 50)
-    reference_vertices = vertices - center
-    orientation = np.array([1., 0., 0., 0.])
-    orientation_keyframes = np.full((2, 4), np.nan, dtype=np.float64)
-    center_keyframes = np.full((2, 3), np.nan, dtype=np.float64)
+    return {"center": center,
+            "vertices": vertices,
+            "faces": faces,
+            "reference_vertices": vertices - center,
+            "orientation": np.array([1., 0., 0., 0.]),
+            "orientation_keyframes": np.full((2, 4), np.nan, dtype=np.float64),
+            "center_keyframes": np.full((2, 3), np.nan, dtype=np.float64),
+            "screen_width": 800,
+            "screen_height": 800,
+            "camera_location": np.array([400., 400., -100.]),
+            "rotation_speed": np.pi / 80.,
+            "translation_speed": 5.,
+            "fps": 60,
+            "number_of_frames": 100,
+            "projection_method": 1}
 
-    screen_width = 800
-    screen_height = 800
-    camera_location = np.array([400., 400., -100.])
 
-    rotation_speed = np.pi / 80
-    translation_speed = 5
+def load_translation_controls(center: np.ndarray,
+                              vertices: np.ndarray,
+                              translation_speed: float) -> Dict:
+    return {pygame.K_LEFT: (t.translation, (center, vertices, - translation_speed, 0)),
+            pygame.K_RIGHT: (t.translation, (center, vertices, translation_speed, 0)),
+            pygame.K_UP: (t.translation, (center, vertices, translation_speed, 1)),
+            pygame.K_DOWN: (t.translation, (center, vertices, - translation_speed, 1)),
+            pygame.K_w: (t.translation, (center, vertices, translation_speed, 2)),
+            pygame.K_s: (t.translation, (center, vertices, - translation_speed, 2))}
 
-    fps = 60
-    number_of_frames = 100
 
-    projection_method = 1
+def load_rotation_controls(center: np.ndarray,
+                           vertices: np.ndarray,
+                           orientation: np.ndarray,
+                           rotation_speed: float) -> Dict:
+    return {pygame.K_LEFT: (rotation_script, (center, vertices, - rotation_speed, orientation, 1)),
+            pygame.K_RIGHT: (rotation_script, (center, vertices, rotation_speed, orientation, 1)),
+            pygame.K_UP: (rotation_script, (center, vertices, - rotation_speed, orientation, 0)),
+            pygame.K_DOWN: (rotation_script, (center, vertices, rotation_speed, orientation, 0)),
+            pygame.K_a: (rotation_script, (center, vertices, - rotation_speed, orientation, 2)),
+            pygame.K_d: (rotation_script, (center, vertices, rotation_speed, orientation, 2))}
+
+
+def load_record_keyframes_controls(center: np.ndarray,
+                                   orientation: np.ndarray,
+                                   orientation_keyframes: np.ndarray,
+                                   center_keyframes: np.ndarray) -> Dict:
+    return {pygame.K_i: (record_keyframes, (orientation,
+                                            center,
+                                            orientation_keyframes[0],
+                                            center_keyframes[0])),
+            pygame.K_o: (record_keyframes, (orientation,
+                                            center,
+                                            orientation_keyframes[1],
+                                            center_keyframes[1]))}
+
+
+def load_play_keyframe_animation_controls(screen,
+                                          camera_location: np.ndarray,
+                                          projection_method: int,
+                                          orientation_keyframes,
+                                          center_keyframes,
+                                          reference_vertices,
+                                          faces,
+                                          fps,
+                                          number_of_frames) -> Dict:
+    return {pygame.K_p: (play_keyframe_animation_script, (screen,
+                                                          camera_location,
+                                                          projection_method,
+                                                          orientation_keyframes,
+                                                          center_keyframes,
+                                                          reference_vertices,
+                                                          faces,
+                                                          fps,
+                                                          number_of_frames))}
+
+
+def play_keyframe_animation_script(screen,
+                                   camera_location: np.ndarray,
+                                   projection_method: int,
+                                   orientation_keyframes,
+                                   center_keyframes,
+                                   reference_vertices,
+                                   faces,
+                                   fps,
+                                   number_of_frames) -> None:
+    if animate_between_keyframes(screen, camera_location, projection_method, orientation_keyframes,
+                                 center_keyframes,
+                                 reference_vertices, faces, fps, number_of_frames):
+        orientation_keyframes[:] = np.full((2, 4), np.nan, dtype=np.float64)
+        center_keyframes[:] = np.full((2, 3), np.nan, dtype=np.float64)
+
+
+def rotation_script(center: np.ndarray,
+                    vertices: np.ndarray,
+                    rotation_speed: float,
+                    orientation: np.ndarray,
+                    axis: int) -> None:
+    assert axis == 0 or axis == 1 or axis == 2
+
+    if axis == 0:
+        t.rotation_about_x(center, vertices, rotation_speed)
+        orientation[:] = update_orientation(orientation, rotation_speed, np.array([1., 0., 0.]))
+    elif axis == 1:
+        t.rotation_about_y(center, vertices, rotation_speed)
+        orientation[:] = update_orientation(orientation, rotation_speed, np.array([0., 1., 0.]))
+    else:
+        t.rotation_about_z(center, vertices, rotation_speed)
+        orientation[:] = update_orientation(orientation, rotation_speed, np.array([0., 0., 1.]))
+
+
+def run() -> None:
+    settings = load_settings()
 
     pygame.init()
 
-    screen = pygame.display.set_mode((screen_width, screen_height))
+    screen = pygame.display.set_mode((settings["screen_width"], settings["screen_height"]))
     pygame.display.set_caption('Quaternion')
+
+    translation_controls = load_translation_controls(settings["center"],
+                                                     settings["vertices"],
+                                                     settings["translation_speed"])
+    rotation_controls = load_rotation_controls(settings["center"],
+                                               settings["vertices"],
+                                               settings["orientation"],
+                                               settings["rotation_speed"])
+    record_keyframes_controls = load_record_keyframes_controls(settings["center"],
+                                                               settings["orientation"],
+                                                               settings["orientation_keyframes"],
+                                                               settings["center_keyframes"])
+    play_keyframe_animation_controls = load_play_keyframe_animation_controls(screen,
+                                                                             settings["camera_location"],
+                                                                             settings["projection_method"],
+                                                                             settings["orientation_keyframes"],
+                                                                             settings["center_keyframes"],
+                                                                             settings["reference_vertices"],
+                                                                             settings["faces"],
+                                                                             settings["fps"],
+                                                                             settings["number_of_frames"])
 
     running = True
     while running:
@@ -275,70 +391,20 @@ def run() -> None:
             if event.type == pygame.QUIT:
                 running = False
 
-        if pygame.key.get_pressed()[pygame.K_i]:
-            record_keyframes(orientation,
-                             center,
-                             orientation_keyframes[0],
-                             center_keyframes[0])
-
-        if pygame.key.get_pressed()[pygame.K_o]:
-            record_keyframes(orientation,
-                             center,
-                             orientation_keyframes[1],
-                             center_keyframes[1])
-
-        if pygame.key.get_pressed()[pygame.K_p]:
-            if animate_between_keyframes(screen, camera_location, projection_method, orientation_keyframes,
-                                         center_keyframes,
-                                         reference_vertices, faces, fps, number_of_frames):
-                orientation_keyframes = np.full((2, 4), np.nan, dtype=np.float64)
-                center_keyframes = np.full((2, 3), np.nan, dtype=np.float64)
+        control(record_keyframes_controls)
+        control(play_keyframe_animation_controls)
 
         if pygame.key.get_pressed()[pygame.K_LSHIFT] or pygame.key.get_pressed()[pygame.K_RSHIFT]:
-            if pygame.key.get_pressed()[pygame.K_LEFT]:
-                t.rotation_about_y(center, vertices, - rotation_speed)
-                orientation = update_orientation(orientation, - rotation_speed, np.array([0., 1., 0.]))
-
-            if pygame.key.get_pressed()[pygame.K_RIGHT]:
-                t.rotation_about_y(center, vertices, rotation_speed)
-                orientation = update_orientation(orientation, rotation_speed, np.array([0., 1., 0.]))
-
-            if pygame.key.get_pressed()[pygame.K_UP]:
-                t.rotation_about_x(center, vertices, - rotation_speed)
-                orientation = update_orientation(orientation, - rotation_speed, np.array([1., 0., 0.]))
-
-            if pygame.key.get_pressed()[pygame.K_DOWN]:
-                t.rotation_about_x(center, vertices, rotation_speed)
-                orientation = update_orientation(orientation, rotation_speed, np.array([1., 0., 0.]))
-
-            if pygame.key.get_pressed()[pygame.K_a]:
-                t.rotation_about_z(center, vertices, - rotation_speed)
-                orientation = update_orientation(orientation, - rotation_speed, np.array([0., 0., 1.]))
-
-            if pygame.key.get_pressed()[pygame.K_d]:
-                t.rotation_about_z(center, vertices, rotation_speed)
-                orientation = update_orientation(orientation, rotation_speed, np.array([0., 0., 1.]))
+            control(rotation_controls)
 
         else:
-            if pygame.key.get_pressed()[pygame.K_LEFT]:
-                t.translation(center, vertices, - translation_speed, 0)
+            control(translation_controls)
 
-            if pygame.key.get_pressed()[pygame.K_RIGHT]:
-                t.translation(center, vertices, translation_speed, 0)
-
-            if pygame.key.get_pressed()[pygame.K_UP]:
-                t.translation(center, vertices, translation_speed, 1)
-
-            if pygame.key.get_pressed()[pygame.K_DOWN]:
-                t.translation(center, vertices, - translation_speed, 1)
-
-            if pygame.key.get_pressed()[pygame.K_a]:
-                t.translation(center, vertices, translation_speed, 2)
-
-            if pygame.key.get_pressed()[pygame.K_d]:
-                t.translation(center, vertices, - translation_speed, 2)
-
-        render(screen, vertices, faces, projection(projection_method, camera_location))
+        render(screen,
+               settings["vertices"],
+               settings["faces"],
+               projection(settings["projection_method"],
+                          settings["camera_location"]))
 
     pygame.quit()
     sys.exit(0)
