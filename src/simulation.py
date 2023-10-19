@@ -7,6 +7,40 @@ import numpy as np
 import src.coordinates as coc
 import src.transformations as t
 import src.quaternion as q
+import src.interpolation as i
+
+
+def animate_between_keyframes(screen: pygame.Surface,
+                              camera_location: np.ndarray,
+                              orientation_keyframes: np.ndarray,
+                              center_keyframes: np.ndarray,
+                              reference_vertices: np.ndarray,
+                              faces: np.ndarray,
+                              fps: int = 30,
+                              number_of_frames: int = 100) -> None:
+    assert (orientation_keyframes.dtype == np.float64
+            and center_keyframes.dtype == np.float64
+            and camera_location.dtype == np.float64
+            and reference_vertices.dtype == np.float64
+            and faces.dtype == np.int64)
+    assert (camera_location.shape == (3,)
+            and orientation_keyframes.shape == (2, 4)
+            and center_keyframes.shape == (2, 3)
+            and len(reference_vertices.shape) <= 2 and reference_vertices.shape[-1] == 3
+            and len(faces.shape) <= 2)
+
+    interpolated_quaternions = i.linear_interpolation(orientation_keyframes,
+                                                      number_of_frames)
+    interpolated_centers = i.linear_interpolation(center_keyframes,
+                                                  number_of_frames)
+
+    clock = pygame.time.Clock()
+    for j in range(number_of_frames):
+        render(screen,
+               t.quaternion_rotation(interpolated_quaternions[j], reference_vertices) + interpolated_centers[j],
+               faces, screen.get_height(), projection(0, camera_location))
+
+        clock.tick(fps)
 
 
 def update_orientation(orientation: np.ndarray,
