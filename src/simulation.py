@@ -288,9 +288,9 @@ def run() -> None:
                              center_keyframes[1])
 
         if pygame.key.get_pressed()[pygame.K_p]:
-            if animate_between_keyframes(screen, camera_location, projection_method, orientation_keyframes, center_keyframes,
-                                      reference_vertices, faces, fps, number_of_frames):
-
+            if animate_between_keyframes(screen, camera_location, projection_method, orientation_keyframes,
+                                         center_keyframes,
+                                         reference_vertices, faces, fps, number_of_frames):
                 orientation_keyframes = np.full((2, 4), np.nan, dtype=np.float64)
                 center_keyframes = np.full((2, 3), np.nan, dtype=np.float64)
 
@@ -342,5 +342,3 @@ def run() -> None:
 
     pygame.quit()
     sys.exit(0)
-
-
