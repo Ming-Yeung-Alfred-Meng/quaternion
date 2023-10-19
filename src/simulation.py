@@ -18,6 +18,18 @@ def animate_between_keyframes(screen: pygame.Surface,
                               faces: np.ndarray,
                               fps: int = 30,
                               number_of_frames: int = 100) -> None:
+    """
+    Interpolate two keyframes and play animation.
+    :param screen: PyGame display window.
+    :param camera_location: 3-numpy-array of camera location in world frame.
+    :param orientation_keyframes: 2 x 4 numpy array of object orientations of two keyframes in quaternions.
+    :param center_keyframes: 2 x 3 numpy array of object centers of two keyframes.
+    :param reference_vertices: v x 3 object vertices with (0, 0, 0) as center. All orientations are relative to them.
+    :param faces: 2D numpy array of face indices.
+    :param fps: number of frames per second of the animation.
+    :param number_of_frames: number of frames of the animation.
+    :return: None
+    """
     assert (orientation_keyframes.dtype == np.float64
             and center_keyframes.dtype == np.float64
             and camera_location.dtype == np.float64
@@ -243,7 +255,7 @@ def start_environment(screen_width: Union[int, float],
     :param uniform_scale_controls: A dictionary specifying controls for uniform scale of the object. Keys are PyGame
     keys and values are tuples where the first element is the function to execute, and the second is a tuple of
     arguments into the function.
-    :param camera_location:
+    :param camera_location: 3-numpy-array of camera location in world frame.
     :param vertices: v x 3 matrix of vertices of the object to display
     :param faces: f x 4 matrix of vertices of face indices of the object
     :return: None
