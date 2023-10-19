@@ -38,7 +38,7 @@ def animate_between_keyframes(screen: pygame.Surface,
     for j in range(number_of_frames):
         render(screen,
                t.quaternion_rotation(interpolated_quaternions[j], reference_vertices) + interpolated_centers[j],
-               faces, screen.get_height(), projection(0, camera_location))
+               faces, projection(0, camera_location))
 
         clock.tick(fps)
 
@@ -146,19 +146,18 @@ def orthographic_projection(vertices: np.ndarray) -> np.ndarray:
     return vertices[:, 0:2]
 
 
-def draw_wireframe(screen: pygame.Surface, vertices: np.ndarray, faces: np.ndarray, screen_height: int) -> None:
+def draw_wireframe(screen: pygame.Surface, vertices: np.ndarray, faces: np.ndarray) -> None:
     """
     Draw the 2D projected image of the wireframe of a 3D mesh onto the PyGame surface.
     :param screen: pygame Surface
     :param vertices: n x 2 matrix of projected vertices of the wireframe
     :param faces: m x 4 matrix of face indices
-    :param screen_height: height of the surface
     :return None
     """
     assert len(vertices.shape) == 2
     assert vertices.shape[1] == 2
 
-    vertices_to_draw = coc.cartesian_to_pygame(vertices, screen_height)
+    vertices_to_draw = coc.cartesian_to_pygame(vertices, screen.get_height())
 
     for face in faces:
         for i in range(face.shape[0]):
@@ -182,21 +181,19 @@ def control(key_to_action: Dict[int, Tuple[Callable, Tuple]]) -> None:
 def render(screen: pygame.Surface,
            vertices: np.ndarray,
            faces: np.ndarray,
-           screen_height: Union[int, float],
            projection_function: Callable[[np.ndarray], np.ndarray]) -> None:
     """
     Render the environment in which the object 'vertices' and 'faces' represent.
     :param screen: PyGame display window
     :param vertices: v x 3 matrix of vertices
     :param faces: f x 4 matrix of face indices
-    :param screen_height: height of the PyGame display window
     :param projection_function: a function that project 'vertices' onto 'screen'. Takes v x 3 matrix of vertices and
     outputs v x 2 matrix of projected vertices
     :return: None
     """
     screen.fill((255, 255, 255))
 
-    draw_wireframe(screen, projection_function(vertices), faces, screen_height)
+    draw_wireframe(screen, projection_function(vertices), faces)
 
     pygame.display.update()
 
@@ -274,7 +271,7 @@ def start_environment(screen_width: Union[int, float],
             control(translation_controls)
             control(uniform_scale_controls)
 
-        render(screen, vertices, faces, screen_height, projection(0, camera_location))
+        render(screen, vertices, faces, projection(0, camera_location))
 
     pygame.quit()
     sys.exit(0)
