@@ -6,9 +6,26 @@ import numpy as np
 
 import src.coordinates as coc
 import src.transformations as t
+import src.quaternion as q
 
 
-# orientation_keyframe, and center_keyframe should not be shallow copies of vertex and center.
+def update_orientation(orientation: np.ndarray,
+                       angle: float,
+                       axis: np.ndarray) -> np.ndarray:
+    """
+    Return the new orientation in quaternion after rotating about an axis by an angle.
+    :param orientation: 4-numpy-array of orientation in quaternion before rotation.
+    :param angle: radian angle of rotation.
+    :param axis: 3-numpy-array of axis of rotation.
+    :return: 4-numpy-array of orientation in quaternion after rotation
+    """
+    assert orientation.dtype == np.float64 and axis.dtype == np.float64
+    assert orientation.shape == (4,) and axis.shape == (3,)
+
+    return q.quaternion_multiplication(q.rotation_quaternion(angle, axis),
+                                       orientation)
+
+
 def record_keyframes(orientation: np.ndarray,
                      center: np.ndarray,
                      orientation_keyframe: np.ndarray,
