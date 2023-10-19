@@ -18,18 +18,21 @@ def animate_between_keyframes(screen: pygame.Surface,
                               reference_vertices: np.ndarray,
                               faces: np.ndarray,
                               fps: int = 30,
-                              number_of_frames: int = 100) -> None:
+                              number_of_frames: int = 100) -> bool:
     """
     Interpolate two keyframes and play animation.
     :param screen: PyGame display window.
     :param camera_location: 3-numpy-array of camera location in world frame.
+    :param projection_method: 0 to use perspective projection, 1 to use orthographic projection.
     :param orientation_keyframes: 2 x 4 numpy array of object orientations of two keyframes in quaternions.
+    If it has nan values, i.e. at least one keyframe has not been captured, the function exits and returns False.
     :param center_keyframes: 2 x 3 numpy array of object centers of two keyframes.
+    If it has nan values, i.e. at least one keyframe has not been captured, the function exits and return False.
     :param reference_vertices: v x 3 object vertices with (0, 0, 0) as center. All orientations are relative to them.
     :param faces: 2D numpy array of face indices.
     :param fps: number of frames per second of the animation.
     :param number_of_frames: number of frames of the animation.
-    :return: None
+    :return: True if the animation was successfully created and played. False otherwise.
     """
     assert projection_method == 0 or projection_method == 1
     assert (orientation_keyframes.dtype == np.float64
@@ -43,6 +46,9 @@ def animate_between_keyframes(screen: pygame.Surface,
             and len(reference_vertices.shape) <= 2 and reference_vertices.shape[-1] == 3
             and len(faces.shape) <= 2)
 
+    if np.any(np.isnan(orientation_keyframes)) or np.any(np.isnan(center_keyframes)):
+        return False
+
     interpolated_quaternions = i.linear_interpolation(orientation_keyframes,
                                                       number_of_frames)
     interpolated_centers = i.linear_interpolation(center_keyframes,
@@ -55,6 +61,8 @@ def animate_between_keyframes(screen: pygame.Surface,
                faces, projection(projection_method, camera_location))
 
         clock.tick(fps)
+
+    return True
 
 
 def update_orientation(orientation: np.ndarray,
@@ -280,8 +288,11 @@ def run() -> None:
                              center_keyframes[1])
 
         if pygame.key.get_pressed()[pygame.K_p]:
-            animate_between_keyframes(screen, camera_location, orientation_keyframes, center_keyframes,
-                                      reference_vertices, faces, fps, number_of_frames)
+            if animate_between_keyframes(screen, camera_location, projection_method, orientation_keyframes, center_keyframes,
+                                      reference_vertices, faces, fps, number_of_frames):
+
+                orientation_keyframes = np.full((2, 4), np.nan, dtype=np.float64)
+                center_keyframes = np.full((2, 3), np.nan, dtype=np.float64)
 
         if pygame.key.get_pressed()[pygame.K_LSHIFT] or pygame.key.get_pressed()[pygame.K_RSHIFT]:
             if pygame.key.get_pressed()[pygame.K_LEFT]:
