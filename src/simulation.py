@@ -356,35 +356,12 @@ def rotation_script(center: np.ndarray,
         orientation[:] = update_orientation(orientation, rotation_speed, np.array([0., 0., 1.]))
 
 
-def run() -> None:
-    settings = load_settings()
-
-    pygame.init()
-
-    screen = pygame.display.set_mode((settings["screen_width"], settings["screen_height"]))
-    pygame.display.set_caption('Quaternion')
-
-    translation_controls = load_translation_controls(settings["center"],
-                                                     settings["vertices"],
-                                                     settings["translation_speed"])
-    rotation_controls = load_rotation_controls(settings["center"],
-                                               settings["vertices"],
-                                               settings["orientation"],
-                                               settings["rotation_speed"])
-    record_keyframes_controls = load_record_keyframes_controls(settings["center"],
-                                                               settings["orientation"],
-                                                               settings["orientation_keyframes"],
-                                                               settings["center_keyframes"])
-    play_keyframe_animation_controls = load_play_keyframe_animation_controls(screen,
-                                                                             settings["camera_location"],
-                                                                             settings["projection_method"],
-                                                                             settings["orientation_keyframes"],
-                                                                             settings["center_keyframes"],
-                                                                             settings["reference_vertices"],
-                                                                             settings["faces"],
-                                                                             settings["fps"],
-                                                                             settings["number_of_frames"])
-
+def start_environment(screen: pygame.Surface,
+                      settings: Dict,
+                      rotation_controls: Dict,
+                      translation_controls: Dict,
+                      record_keyframes_controls: Dict,
+                      play_keyframe_animation_controls: Dict) -> None:
     running = True
     while running:
         for event in pygame.event.get():
@@ -408,3 +385,42 @@ def run() -> None:
 
     pygame.quit()
     sys.exit(0)
+
+
+def run() -> None:
+    settings = load_settings()
+
+    pygame.init()
+
+    screen = pygame.display.set_mode((settings["screen_width"], settings["screen_height"]))
+    pygame.display.set_caption('Quaternion')
+
+    translation_controls = load_translation_controls(settings["center"],
+                                                     settings["vertices"],
+                                                     settings["translation_speed"])
+
+    rotation_controls = load_rotation_controls(settings["center"],
+                                               settings["vertices"],
+                                               settings["orientation"],
+                                               settings["rotation_speed"])
+
+    record_keyframes_controls = load_record_keyframes_controls(settings["center"],
+                                                               settings["orientation"],
+                                                               settings["orientation_keyframes"],
+                                                               settings["center_keyframes"])
+
+    play_keyframe_animation_controls = load_play_keyframe_animation_controls(screen,
+                                                                             settings["camera_location"],
+                                                                             settings["projection_method"],
+                                                                             settings["orientation_keyframes"],
+                                                                             settings["center_keyframes"],
+                                                                             settings["reference_vertices"],
+                                                                             settings["faces"],
+                                                                             settings["fps"],
+                                                                             settings["number_of_frames"])
+    start_environment(screen,
+                      settings,
+                      rotation_controls,
+                      translation_controls,
+                      record_keyframes_controls,
+                      play_keyframe_animation_controls)
