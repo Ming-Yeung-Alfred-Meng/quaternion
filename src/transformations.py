@@ -4,7 +4,6 @@ import src.quaternion as q
 
 
 def quaternion_rotation(quaternion: np.ndarray,
-                        center: np.ndarray,
                         vertices: np.ndarray) -> np.ndarray:
     """
     Rotate vertices using a quaternion.
@@ -14,13 +13,12 @@ def quaternion_rotation(quaternion: np.ndarray,
     :return: v x 3 numpy array of rotated vertices.
     """
     assert (quaternion.dtype == np.float64
-            and center.dtype == np.float64
             and vertices.dtype == np.float64)
-    assert quaternion.shape == (4,) and center.shape == (3,)
+    assert quaternion.shape == (4,)
     assert len(vertices.shape) <= 2 and vertices.shape[-1] == 3
 
     return q.quaternion_to_vector(q.qvq_inverse(quaternion,
-                                                q.vector_to_quaternion(vertices - center))) + center
+                                                q.vector_to_quaternion(vertices)))
 
 
 def rotation_about_x(center: np.ndarray, vertices: np.ndarray, degree: float) -> None:
