@@ -95,7 +95,7 @@ def quaternion_to_vector(q: np.ndarray) -> np.ndarray:
     :return: q x 3 numpy array of vector representations
     """
     assert q.dtype == np.float64
-    assert np.all(q[..., 0] == 0)
+    assert np.all(q[..., 0] == 0.)
 
     return q[..., 1:].copy()
 

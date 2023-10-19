@@ -12,6 +12,7 @@ import src.interpolation as i
 
 def animate_between_keyframes(screen: pygame.Surface,
                               camera_location: np.ndarray,
+                              projection_method: int,
                               orientation_keyframes: np.ndarray,
                               center_keyframes: np.ndarray,
                               reference_vertices: np.ndarray,
@@ -30,6 +31,7 @@ def animate_between_keyframes(screen: pygame.Surface,
     :param number_of_frames: number of frames of the animation.
     :return: None
     """
+    assert projection_method == 0 or projection_method == 1
     assert (orientation_keyframes.dtype == np.float64
             and center_keyframes.dtype == np.float64
             and camera_location.dtype == np.float64
@@ -50,7 +52,7 @@ def animate_between_keyframes(screen: pygame.Surface,
     for j in range(number_of_frames):
         render(screen,
                t.quaternion_rotation(interpolated_quaternions[j], reference_vertices) + interpolated_centers[j],
-               faces, projection(0, camera_location))
+               faces, projection(projection_method, camera_location))
 
         clock.tick(fps)
 
@@ -252,7 +254,7 @@ def run() -> None:
     fps = 60
     number_of_frames = 100
 
-    projection_method = 0
+    projection_method = 1
 
     pygame.init()
 
