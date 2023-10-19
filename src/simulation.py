@@ -31,11 +31,10 @@ def record_keyframes(orientation: np.ndarray,
                      orientation_keyframe: np.ndarray,
                      center_keyframe: np.ndarray) -> None:
     """
-    Get a vertex's position local to a given origin.
-    :param orientation:
-    :param vertex: 3-numpy-array in world frame used to determine orientation.
+    Record orientation and center of a keyframe.
+    :param orientation: 4-numpy-array of current orientation
     :param center: 3-numpy-array of the object's center in world frame
-    :param orientation_keyframe: 3-numpy-array where orientation is stored.
+    :param orientation_keyframe: 4-numpy-array where orientation is stored.
     :param center_keyframe: 3-numpy-array where current center is stored.
     :return: None
     """
