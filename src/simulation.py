@@ -268,6 +268,12 @@ def load_settings() -> Dict:
 def load_translation_controls(center: np.ndarray,
                               vertices: np.ndarray,
                               translation_speed: float) -> Dict:
+    """
+    Return a dictionary of bindings between keys and scripts for translating an object.
+    :param center: center of the object 'vertices' represents. This is mutated to the new translated center.
+    :param vertices: n x 3 matrix of vertices in world cartesian coordinate
+    :param translation_speed: translation speed.
+    """
     return {pygame.K_LEFT: (t.translation, (center, vertices, - translation_speed, 0)),
             pygame.K_RIGHT: (t.translation, (center, vertices, translation_speed, 0)),
             pygame.K_UP: (t.translation, (center, vertices, translation_speed, 1)),
@@ -280,6 +286,14 @@ def load_rotation_controls(center: np.ndarray,
                            vertices: np.ndarray,
                            orientation: np.ndarray,
                            rotation_speed: float) -> Dict:
+    """
+    Return a dictionary of bindings between keys and scripts for rotating the object.
+    :param center: 3-numpy-array of center of the object. Mutated after rotation.
+    :param vertices: v x 3 numpy array of the object vertices. Mutated after rotation.
+    :param orientation: 4-numpy-array of the object's orientation in quaternion.
+    :param rotation_speed: rotation speed.
+    :return: None
+    """
     return {pygame.K_LEFT: (rotation_script, (center, vertices, - rotation_speed, orientation, 1)),
             pygame.K_RIGHT: (rotation_script, (center, vertices, rotation_speed, orientation, 1)),
             pygame.K_UP: (rotation_script, (center, vertices, - rotation_speed, orientation, 0)),
@@ -292,6 +306,14 @@ def load_record_keyframes_controls(center: np.ndarray,
                                    orientation: np.ndarray,
                                    orientation_keyframes: np.ndarray,
                                    center_keyframes: np.ndarray) -> Dict:
+    """
+    Return a dictionary of bindings between keys and scripts for recording orientation and center of a keyframe.
+    :param orientation: 4-numpy-array of current orientation
+    :param center: 3-numpy-array of the object's center in world frame
+    :param orientation_keyframes: 4-numpy-array where orientation is stored.
+    :param center_keyframes: 3-numpy-array where current center is stored.
+    :return: None
+    """
     return {pygame.K_i: (record_keyframes, (orientation,
                                             center,
                                             orientation_keyframes[0],
@@ -311,6 +333,21 @@ def load_play_keyframe_animation_controls(screen,
                                           faces,
                                           fps,
                                           number_of_frames) -> Dict:
+    """
+    Return a dictionary of bindings between keys and scripts for animating the interpolated frames.
+    :param screen: PyGame display window.
+    :param camera_location: 3-numpy-array of camera location in world frame.
+    :param projection_method: 0 to use perspective projection, 1 to use orthographic projection.
+    :param orientation_keyframes: 2 x 4 numpy array of object orientations of two keyframes in quaternions.
+    If it has nan values, i.e. at least one keyframe has not been captured, the function exits and returns False.
+    :param center_keyframes: 2 x 3 numpy array of object centers of two keyframes.
+    If it has nan values, i.e. at least one keyframe has not been captured, the function exits and return False.
+    :param reference_vertices: v x 3 object vertices with (0, 0, 0) as center. All orientations are relative to them.
+    :param faces: 2D numpy array of face indices.
+    :param fps: number of frames per second of the animation.
+    :param number_of_frames: number of frames of the animation.
+    :return: None
+    """
     return {pygame.K_p: (play_keyframe_animation_script, (screen,
                                                           camera_location,
                                                           projection_method,
@@ -331,11 +368,26 @@ def play_keyframe_animation_script(screen,
                                    faces,
                                    fps,
                                    number_of_frames) -> None:
+    """
+    Script to execute when animating the interpolated frames.
+    :param screen: PyGame display window.
+    :param camera_location: 3-numpy-array of camera location in world frame.
+    :param projection_method: 0 to use perspective projection, 1 to use orthographic projection.
+    :param orientation_keyframes: 2 x 4 numpy array of object orientations of two keyframes in quaternions.
+    If it has nan values, i.e. at least one keyframe has not been captured, the function exits and returns False.
+    :param center_keyframes: 2 x 3 numpy array of object centers of two keyframes.
+    If it has nan values, i.e. at least one keyframe has not been captured, the function exits and return False.
+    :param reference_vertices: v x 3 object vertices with (0, 0, 0) as center. All orientations are relative to them.
+    :param faces: 2D numpy array of face indices.
+    :param fps: number of frames per second of the animation.
+    :param number_of_frames: number of frames of the animation.
+    :return: None
+    """
     if animate_between_keyframes(screen, camera_location, projection_method, orientation_keyframes,
                                  center_keyframes,
                                  reference_vertices, faces, fps, number_of_frames):
-        orientation_keyframes[:] = np.full((2, 4), np.nan, dtype=np.float64)
-        center_keyframes[:] = np.full((2, 3), np.nan, dtype=np.float64)
+        orientation_keyframes[:] = np.full_like(orientation_keyframes, np.nan, dtype=np.float64)
+        center_keyframes[:] = np.full_like(orientation_keyframes, np.nan, dtype=np.float64)
 
 
 def rotation_script(center: np.ndarray,
@@ -343,6 +395,15 @@ def rotation_script(center: np.ndarray,
                     rotation_speed: float,
                     orientation: np.ndarray,
                     axis: int) -> None:
+    """
+    Script to execute when rotating the object.
+    :param center: 3-numpy-array of center of the object. Mutated after rotation.
+    :param vertices: v x 3 numpy array of the object vertices. Mutated after rotation.
+    :param rotation_speed: rotation speed.
+    :param orientation: 4-numpy-array of the object's orientation in quaternion.
+    :param axis: canonical axis about which to rotate. 0, 1, 2 for x-, y-, and z-axis, respectively.
+    :return: None
+    """
     assert axis == 0 or axis == 1 or axis == 2
 
     if axis == 0:
@@ -362,6 +423,17 @@ def start_environment(screen: pygame.Surface,
                       translation_controls: Dict,
                       record_keyframes_controls: Dict,
                       play_keyframe_animation_controls: Dict) -> None:
+    """
+    The main loop of the simulation.
+    :param screen: pygame screen/display.
+    :param settings: dictionary of settings
+    :param rotation_controls: dictionary of bindings between keys and scripts for the rotation of the object.
+    :param translation_controls: dictionary of bindings between keys and scripts for the translation of the object.
+    :param record_keyframes_controls: dictionary of bindings between keys and scripts for recording keyframes.
+    :param play_keyframe_animation_controls: dictionary of bindings between keys and scripts for animating the
+    interpolated frames.
+    :return: None
+    """
     running = True
     while running:
         for event in pygame.event.get():
@@ -388,6 +460,10 @@ def start_environment(screen: pygame.Surface,
 
 
 def run() -> None:
+    """
+    Run the simulation.
+    :return: None
+    """
     settings = load_settings()
 
     pygame.init()
